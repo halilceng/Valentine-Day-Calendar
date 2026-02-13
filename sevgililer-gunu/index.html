@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Sevgililer Günü Sürprizi</title>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Nunito:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+         :root {
+            --primary-color: #ff4d6d;
+            --glass-bg: rgba(255, 255, 255, 0.75);
+            --glass-border: rgba(255, 255, 255, 0.9);
+            --text-color: #4a4a4a;
+        }
+        
+        body {
+            font-family: 'Nunito', sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            background: linear-gradient(-45deg, #ff9a9e, #fad0c4, #ffdde1, #fbc2eb);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            overflow-x: hidden;
+            position: relative;
+        }
+        /* Sağdaki kaydırma çubuğunu gizle ama kaydırmaya izin ver (Mobil için en iyisi) */
+        
+        body::-webkit-scrollbar {
+            display: none;
+        }
+        
+        body {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        
+        @keyframes gradientBG {
+            0% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+        
+        .bg-hearts {
+            position: fixed;
+            /* Mobilde sayfa kaysa bile kalpler ekranda kalsın */
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+        
+        .bg-heart {
+            position: absolute;
+            color: rgba(255, 255, 255, 0.45);
+            bottom: -50px;
+            animation: floatUp linear infinite;
+        }
+        
+        @keyframes floatUp {
+            0% {
+                transform: translateY(0) scale(0.5) rotate(0deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.8;
+            }
+            100% {
+                transform: translateY(-110vh) scale(1.2) rotate(360deg);
+                opacity: 0;
+            }
+        }
+        
+        .container {
+            width: 90%;
+            max-width: 1000px;
+            padding: 40px 10px;
+            text-align: center;
+            z-index: 1;
+        }
+        
+        h1 {
+            font-family: 'Dancing Script', cursive;
+            font-size: 2.8rem;
+            /* Mobilde daha dengeli başlık */
+            color: #fff;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 10px rgba(0, 0, 0, 0.15);
+        }
+        
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            /* Mobilde 2, tablette 3-4 yan yana olur */
+            gap: 15px;
+            justify-content: center;
+        }
+        
+        .day-box {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 2px solid var(--glass-border);
+            border-radius: 20px;
+            height: 150px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 20px rgba(255, 77, 109, 0.15);
+        }
+        
+        .day-box:active {
+            /* Dokunulduğunda tepki ver */
+            transform: scale(0.95);
+            background: rgba(255, 255, 255, 0.9);
+        }
+        
+        .day-box.locked {
+            filter: grayscale(1);
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .heart-wrapper {
+            position: relative;
+            width: 65px;
+            height: 60px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        
+        .heart-icon {
+            font-size: 4rem;
+            background: linear-gradient(to bottom right, #ff758c, #ff4d6d);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            position: absolute;
+        }
+        
+        .day-number {
+            position: absolute;
+            font-weight: 900;
+            font-size: 1.8rem;
+            color: #fff;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
+            z-index: 2;
+        }
+        
+        .day-title {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: #555;
+            padding: 0 5px;
+        }
+        /* --- MOBİL MODAL --- */
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(8px);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            padding: 15px;
+            box-sizing: border-box;
+        }
+        
+        .modal-content {
+            background: #fff;
+            width: 100%;
+            max-width: 400px;
+            border-radius: 25px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            max-height: 85vh;
+            animation: modalPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        
+        @keyframes modalPop {
+            from {
+                transform: scale(0.9);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+        
+        .modal-header {
+            background: linear-gradient(135deg, #ff758c, #ff4d6d);
+            padding: 15px;
+            color: white;
+            text-align: center;
+            position: relative;
+        }
+        
+        .modal-header h2 {
+            font-family: 'Dancing Script', cursive;
+            margin: 0;
+            font-size: 2rem;
+        }
+        
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            color: white;
+            font-size: 2rem;
+            cursor: pointer;
+            line-height: 1;
+        }
+        
+        .modal-body {
+            padding: 20px;
+            text-align: center;
+            overflow-y: auto;
+            /* Mobilde uzun yazı/resim olursa kaydırılabilir */
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .modal-image-container {
+            width: 100%;
+            margin-top: 15px;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .modal-image {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        /* Ekran çok küçükse başlığı küçült */
+        
+        @media (max-width: 400px) {
+            h1 {
+                font-size: 2.2rem;
+            }
+            .calendar-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="bg-hearts" id="bgHearts"></div>
+
+    <div class="container">
+        <h1>Valentine's Day Calendar ❤️</h1>
+        <div class="calendar-grid" id="calendarGrid"></div>
+    </div>
+
+    <div id="myModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="close-btn">&times;</span>
+                <h2 id="modalTitle"></h2>
+            </div>
+            <div id="modalBody" class="modal-body"></div>
+        </div>
+    </div>
+
+    <script>
+        const startDate = new Date('2024-02-01');
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const diffDays = Math.ceil(Math.abs(today - startDate) / (1000 * 60 * 60 * 24)) + 1;
+
+        // Kalp Üretici
+        const bgHearts = document.getElementById('bgHearts');
+        for (let i = 0; i < 25; i++) {
+            const heart = document.createElement('i');
+            heart.classList.add('fas', 'fa-heart', 'bg-heart');
+            heart.style.left = Math.random() * 100 + '%';
+            heart.style.fontSize = Math.random() * 20 + 10 + 'px';
+            heart.style.animationDuration = Math.random() * 10 + 10 + 's';
+            heart.style.animationDelay = Math.random() * 5 + 's';
+            bgHearts.appendChild(heart);
+        }
+
+        const contents = [{
+            day: 1,
+            title: 'Hayatımın Baharı 🌸',
+            type: 'text',
+            content: 'Hayatıma girdiğin gün, bütün mevsimlerim kıştan bahara döndü.'
+        }, {
+            day: 2,
+            title: 'En Parlak Yıldızım ✨',
+            type: 'image',
+            content: 'gulus.jpg',
+            text: 'Gülüşün, karanlık günlerimde içimi ısıtan en parlak gökyüzümdür.'
+        }, {
+            day: 3,
+            title: 'Huzur Limanım ⚓',
+            type: 'text',
+            content: 'Seninle geçen her saniye ömrüme ömür katıyor sanki.'
+        }, {
+            day: 4,
+            title: 'Evim Sensin 🏠',
+            type: 'image',
+            content: 'goz1.jpg',
+            text: 'Gözlerine baktığımda orada geleceğimi ve evimi görüyorum.'
+        }, {
+            day: 5,
+            title: 'Sadece Sen ❤️',
+            type: 'image',
+            content: 'sadece.jpg',
+            text: 'Kalbim sadece senin ritminle atıyor.'
+        }, {
+            day: 6,
+            title: 'En Güzel Melodi 🎶',
+            type: 'audio',
+            content: 'ses.mp3',
+            text: 'Sesini duymak her zaman ruhumu dinlendiriyor.'
+        }, {
+            day: 7,
+            title: 'Anlamlı Sessizlik 🤫',
+            type: 'text',
+            content: 'Seninle susmak bile başkalarıyla konuşmaktan daha anlamlı.'
+        }, {
+            day: 8,
+            title: 'Doğal Mucizem 🌿',
+            type: 'text',
+            content: 'Seni sevmek, nefes almak kadar doğal ve güzel.'
+        }, {
+            day: 9,
+            title: 'İlk ve Son Düşüncem 💭',
+            type: 'text',
+            content: 'Sabah uyandığımda kurduğum ilk hayalimsin.'
+        }, {
+            day: 10,
+            title: 'Güç Kaynağım 💪',
+            type: 'text',
+            content: 'Sen benim her zorluğa karşı durma gücümsün.'
+        }, {
+            day: 11,
+            title: 'En Büyük Şansım 🍀',
+            type: 'text',
+            content: 'Sen hayattaki en büyük iyikimsin.'
+        }, {
+            day: 12,
+            title: 'Geleceğim 🚀',
+            type: 'text',
+            content: 'Yaşlanmak istediğim o evin başrolünde sen varsın.'
+        }, {
+            day: 13,
+            title: 'Her Gün Bayram 🎉',
+            type: 'text',
+            content: 'Seninle uyandığım her sabah zaten bir bayram.'
+        }, {
+            day: 14,
+            title: 'Seni Çok Seviyorum! ❤️',
+            type: 'image',
+            content: 'biz.jpg',
+            text: 'İyi ki varsın sevgilim, Sevgililer Günümüz kutlu olsun!'
+        }];
+
+        const grid = document.getElementById('calendarGrid');
+        contents.forEach(item => {
+            const box = document.createElement('div');
+            box.className = `day-box ${item.day > diffDays ? 'locked' : ''}`;
+            box.innerHTML = `
+                <div class="heart-wrapper">
+                    <i class="fas fa-heart heart-icon"></i>
+                    <span class="day-number">${item.day}</span>
+                </div>
+                <span class="day-title">${item.title}</span>
+            `;
+            box.onclick = () => {
+                if (item.day <= diffDays) openModal(item);
+                else alert(`Bu sürpriz ${item.day} Şubat'ta seni bekliyor olacak! 🤫`);
+            };
+            grid.appendChild(box);
+        });
+
+        function openModal(item) {
+            const modal = document.getElementById('myModal');
+            const title = document.getElementById('modalTitle');
+            const body = document.getElementById('modalBody');
+
+            title.innerText = item.title;
+            body.innerHTML = '';
+
+            const infoText = item.text || (item.type === 'text' ? item.content : '');
+            if (infoText) body.innerHTML += `<p style="margin-bottom:15px">${infoText}</p>`;
+
+            if (item.type === 'image') {
+                body.innerHTML += `<div class="modal-image-container"><img src="${item.content}" class="modal-image"></div>`;
+            } else if (item.type === 'audio') {
+                body.innerHTML += `<audio controls src="${item.content}" style="width:100%; margin-top:10px;"></audio>`;
+            }
+
+            modal.style.display = 'flex';
+        }
+
+        document.querySelector('.close-btn').onclick = () => document.getElementById('myModal').style.display = 'none';
+        window.onclick = (e) => {
+            if (e.target.className === 'modal') e.target.style.display = 'none';
+        }
+    </script>
+</body>
+
+</html>
